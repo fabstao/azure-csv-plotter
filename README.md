@@ -3,6 +3,14 @@
 This app plots data from CSVs retrieved from:
 [https://github.com/fabstao/azure-ps-storage-metrics](Azure Storage Metrics)
 
+## Dependencies
+
+Install with pip using requirements.txt:
+
+```
+pip install -r requirements.txt
+```
+
 ## Usage:
 
 Use Pandas to retrieve data from Azure Monitor CSV
