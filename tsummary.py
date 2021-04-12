@@ -69,7 +69,7 @@ class GraphCsv:
 					miy = "Average"
 				if not (( ns == "Blob" and metric == "TableCapacity" ) or  ( ns == "Table" and metric == "BlobCapacity" )):
 					specifdf=midf.loc[midf['Type']==metric,['TimeStamp', miy, 'Name']]
-					specifdf=specifdf.nlargest(30,miy)
+					specifdf=specifdf.nlargest(90,miy)
 					xappend.append_df_to_excel(nombre+"_summ.xlsx", specifdf, sheet_name=ns +" "+ metric)
 
 
