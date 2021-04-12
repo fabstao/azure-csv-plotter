@@ -28,4 +28,5 @@ Usage:
 
 ```
 python3 analyze.py <path>
+python3 tsummary.py <path>
 ```
