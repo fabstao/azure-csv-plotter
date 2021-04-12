@@ -54,6 +54,7 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
     writer = pd.ExcelWriter(filename, engine='openpyxl', mode='a')
 
     # try to open an existing workbook
+    print("Loading Workbook")
     writer.book = load_workbook(filename)
     
     # get the last row in the existing Excel sheet
@@ -69,3 +70,15 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
         writer.book.remove(writer.book.worksheets[idx])
         # create an empty sheet [sheet_name] using old index
         writer.book.create_sheet(sheet_name, idx)
+    
+    # copy existing sheets
+    writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+
+    if startrow is None:
+        startrow = 0
+
+    # write out the new sheet
+    df.to_excel(writer, sheet_name, startrow=startrow, **to_excel_kwargs)
+
+    # save the workbook
+    writer.save()
