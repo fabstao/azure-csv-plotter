@@ -16,7 +16,7 @@ class GraphCsv:
 	def __init__(self):
 		pass
 
-	def generateG(self,data,nombre):
+	def generateG(self, data, nombre, metrics, namespaces):
 		"""Use Pandas to retrieve data from Azure Monitor CSV
 
 		Arguments:
@@ -29,73 +29,20 @@ class GraphCsv:
 		This function will output PDF files with plot from CSVs
 		"""
 
-		# BLOBs
+		print("\nGenerating PDFs\n")
+		for ns in namespaces:
+			print(ns+" for: "+nombre)
+			midf=data.loc[data['Namespace']==ns,'TimeStamp':'Type'] 
+			print(midf)
 
-		print("BLOB for: "+nombre)
-		print(data.loc[data['Namespace']=="Blob",'TimeStamp':'Type'])
-		miblob=data.loc[data['Namespace']=="Blob",'TimeStamp':'Total'] 
-
-		# Ingress
-
-		miblobingress=miblob.loc[data['Type']=="Ingress",['TimeStamp','Total']] 
-		lineo=miblobingress.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_ingress_blob.pdf')
-
-		# Egress
-
-		miblobegress=miblob.loc[data['Type']=="Egress",'TimeStamp':'Total'] 
-		lineo=miblobegress.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_egress_blob.pdf')
-
-		# Transactions
-
-		miblobtrans=miblob.loc[data['Type']=="Transactions",'TimeStamp':'Total'] 
-		lineo=miblobtrans.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_trans_blob.pdf')
-
-		# BlobCapacity
-
-		miblobbcap=miblob.loc[data['Type']=="BlobCapacity",'TimeStamp':'Average'] 
-		lineo=miblobbcap.plot.line(by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_bcap_blob.pdf')
-
-		# TABLEs
-
-		print("\nTABLE"+nombre)
-		print(data.loc[data['Namespace']=="Table",'TimeStamp':'Type'])
-		mitable=data.loc[data['Namespace']=="Table",'TimeStamp':'Type']
-
-		# Ingress
-
-		mitableingress=mitable.loc[data['Type']=="Ingress",'TimeStamp':'Total'] 
-		lineo=mitableingress.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_ingress_table.pdf')
-
-		# Egress
-
-		mitableegress=mitable.loc[data['Type']=="Egress",'TimeStamp':'Total'] 
-		lineo=mitableegress.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_egress_table.pdf')
-
-		# Transactions
-
-		mitabletrans=mitable.loc[data['Type']=="Transactions",'TimeStamp':'Total'] 
-		lineo=mitabletrans.plot.line(x="TimeStamp",y="Total",by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_trans_table.pdf')
-
-		# TableCapacity
-
-		mitabletcap=mitable.loc[data['Type']=="TableCapacity",'TimeStamp':'Average'] 
-		lineo=mitabletcap.plot.line(by='TimeStamp')
-		fig=lineo.get_figure()
-		fig.savefig(os.path.splitext(nombre)[0]+'_tcap_table.pdf')
+			for metric in metrics: 
+				miy = "Total"
+				if metric == "BlobCapacity" or metric == "TableCapacity":
+					miy = "Average"
+				specifdf=midf.loc[midf['Type']==metric,['TimeStamp',miy]]
+				lineo=specifdf.plot.line(x="TimeStamp", y=miy,by='TimeStamp')
+				fig=lineo.get_figure()
+				fig.savefig(os.path.splitext(nombre)[0]+ns+metric+'.pdf')
 
 def cleanPath(path):
 	# Clean path from full filename
@@ -105,11 +52,13 @@ def cleanPath(path):
 path=sys.argv[1]
 lista=glob.glob(path+"/*.csv")
 migraph = GraphCsv()
+namespaces = ["Blob","Table"]
+metrics = ["Ingress", "Egress", "Transactions", "BlobCapacity", "TableCapacity"]
 
 for i in lista:
 	print("Executing "+i)
 	data = pd.read_csv(path+"/"+i,header=0)
 	data = data[['TimeStamp','Average','Total','Type','Namespace']]
 	nombre=cleanPath(i)
-	migraph.generateG(data,nombre)
+	migraph.generateG(data, nombre, metrics, namespaces)
 

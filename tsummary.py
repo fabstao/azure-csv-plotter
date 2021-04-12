@@ -17,7 +17,7 @@ class GraphCsv:
 	def __init__(self):
 		pass
 
-	def generateG(self,data,nombre, metrics, namespaces):
+	def generateG(self, data, nombre, metrics, namespaces):
 		"""Use Pandas to retrieve data from Azure Monitor CSV
 
 		Arguments:
