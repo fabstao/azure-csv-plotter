@@ -7,6 +7,7 @@
 import pandas as pd
 import sys,glob,ntpath,os
 import matplotlib.pyplot as plt
+import xappend
 
 if len(sys.argv) < 2:
     print("ERROR: Usage: " + sys.argv[0] + " <path>")
@@ -21,7 +22,7 @@ class GraphCsv:
 
 		Arguments:
 		data -- Pandas DataFrame
-		nombre -- filename with full path
+		nombre -- Name for output PDF file
 
 		Return value:
 		Null
@@ -97,10 +98,78 @@ class GraphCsv:
 		fig=lineo.get_figure()
 		fig.savefig(os.path.splitext(nombre)[0]+'_tcap_table.pdf')
 
-#def cleanPath(path):
-	# Clean path from full filename
-#	head, tail = ntpath.split(path)
-#	return tail or ntpath.basename(head)
+	def tsummary(self,data,nombre):
+		"""Use Pandas to summarize data from Azure Monitor CSV
+
+		Arguments:
+		data -- Pandas DataFrame
+		nombre -- Name for output PDF file
+
+		Return value:
+		Null
+
+		This function will output PDF files with plot from CSVs
+		"""
+
+		# BLOBs
+
+		print("BLOB for: "+nombre)
+		print(data.loc[data['Namespace']=="Blob",'TimeStamp':'Type'])
+		miblob=data.loc[data['Namespace']=="Blob",'TimeStamp':'Total'] 
+
+		# Ingress
+
+		miblobingress=miblob.loc[data['Type']=="Ingress",['TimeStamp','Total']] 
+		miblobingress=miblobingress.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", miblobingress, sheet_name="Blob Ingress")
+
+		# Egress
+
+		miblobegress=miblob.loc[data['Type']=="Egress",'TimeStamp':'Total'] 
+		miblobegress=miblobegress.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", miblobegress, sheet_name="Blob Egress")
+
+		# Transactions
+
+		miblobtrans=miblob.loc[data['Type']=="Transactions",'TimeStamp':'Total'] 
+		miblobtrans=miblobtrans.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", miblobtrans, sheet_name="Blob Transactions")
+
+		# BlobCapacity
+
+		miblobbcap=miblob.loc[data['Type']=="BlobCapacity",'TimeStamp':'Average'] 
+		miblobbcap=miblobbcap.nlargest(30,'Average')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", miblobbcap, sheet_name="Blob Capacity")
+
+		# TABLEs
+
+		print("\nTABLE"+nombre)
+		print(data.loc[data['Namespace']=="Table",'TimeStamp':'Type'])
+		mitable=data.loc[data['Namespace']=="Table",'TimeStamp':'Type']
+
+		# Ingress
+
+		mitableingress=mitable.loc[data['Type']=="Ingress",'TimeStamp':'Total'] 
+		mitableingress=mitableingress.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", mitableingress, sheet_name="Table Ingress")
+
+		# Egress
+
+		mitableegress=mitable.loc[data['Type']=="Egress",'TimeStamp':'Total'] 
+		mitableegress=mitableegress.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", mitableegress, sheet_name="Table Egress")
+
+		# Transactions
+
+		mitabletrans=mitable.loc[data['Type']=="Transactions",'TimeStamp':'Total'] 
+		mitabletrans=mitabletrans.nlargest(30,'Total')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", mitabletrans, sheet_name="Table Transactions")
+
+		# TableCapacity
+
+		mitabletcap=mitable.loc[data['Type']=="TableCapacity",'TimeStamp':'Average'] 
+		mitabletcap=mitabletcap.nlargest(30,'Average')
+		xappend.append_df_to_excel(nombre+"_summ.xlsx", mitabletcap, sheet_name="Table Capacity")
 
 path=sys.argv[1]
 lista=glob.glob(path+"/*.csv")
@@ -123,3 +192,4 @@ for i in lista:
 print(maindf.nlargest(40,['Average','Total']))
 nombre="Storage_summary"
 migraph.generateG(data,nombre)
+migraph.tsummary(data,nombre)
